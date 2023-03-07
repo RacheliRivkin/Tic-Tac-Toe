@@ -1,0 +1,172 @@
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+
+        char[][] board = {{'_', '_', '_'}, {'_', '_', '_'}, {'_', '_', '_'}};//The definition of initial board. This variable changes according to the different instructions in the methods.
+        char mark = 'X';//The definition of initial player. Also changes according to the following methods = each turn.
+        Boolean isX = true;//Helps method "changePlayer" determine what is the current player and change it. If it is true it means that it was X's turn.
+        while (restart()) { //This means that as long as the player wants to star a new game it starts, but once he decides not to start - the code doesn't go into the loop thus no new game.
+            clearBoard(board);//Every time a new game starts the board goes back to empty spaces and erases the mark from the previous game.
+            for (int i = 0; i < 9; i++) {//There are 9 turns in total, starting from 0 it stops at 8 = smaller than 9. Each turn does what's in the following loop.
+                if (i % 2 != 0) { //Every other turn, change the mark. If it is not X, change it to X.
+                    mark = changePlayer(false, mark);
+                } else {
+                    mark = changePlayer(true, mark);
+                }
+                turn(board, mark); //After the correct player is chosen, the turn is made. further detail is attached to the "turn" method.
+                if (checkWin(board)) { //After a turn is made, check if there is a win. If so, end the game by breaking the loop. It will automatically ask about starting a new game because this is the condition for the rest of the code.
+                    break;
+                }
+                if (i == 8 && !checkWin(board)) { //If the last turn was made, and there was no win, declare a tie and go back to the beginning of the loop th ask for a new game.
+                    System.out.println("It's a tie.");
+                }
+            }
+        }
+    }
+
+    static char[][] clearBoard(char[][] board) { //A double loop to cover all spots in the 'board' matrix and replace it with '_'.
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                board[i][j] = '_';
+            }
+
+        }
+        return board;
+    }
+
+    static boolean restart() {//Ask the player if they want a new game.
+        boolean toStart = false;//Changes to true of the player wants a new game.
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Would you like to start a new game? Type 1 for 'Yes' and 0 for 'No'.");
+        int command = scanner.nextInt();
+        while (command != -1000000) {//A random point to come up with any condition for the existence of a loop. There needs to be a loop because the last line is a request that wants to start again.
+            if (command == 1) {
+                toStart = true;
+                break;//If the command is understood there is no need for the loop to repeat.
+            } else if (command == 0) {
+                toStart = false;
+                break;//If the command is understood there is no need for the loop to repeat.
+            } else {
+                System.out.println("I did not understand your command, try again with 0 or 1 only.");
+            }
+        }
+        return toStart;//Is now according to whatever the player typed.
+    }
+
+    static char changePlayer(boolean isX, char mark) {//Based on the current player (if isX is true it is X) and it's mark. The player and its mark go together and change together.
+        if (isX) {//If it was not X, make it X.
+            mark = 'X';
+        } else {//If it was X, make ot now O.
+            mark = 'O';
+        }
+        return mark;
+    }
+
+    static char[][] turn(char[][] board, char mark) {//In order to make a turn we need to have an index of a given matrix and the mark of the current player.
+        Scanner scanner = new Scanner(System.in);
+        int row = 0;//If we want to use those numbers after the loop we need them to exist in the scope outside the loop. This is why they show up here first.
+        int column = 0;
+        boolean ask = true; //A condition the determines whether to ask for the location again. If it is true, ask for location. Turns into false when the location is good and there is no need to ask again.
+        while (ask) {
+            row = row();//Requests the row of the desired location. Further details attached to 'row' method.
+            column = column();//Requests the column of the desired location. Further details attached to 'column' method.
+            if (checkVacancy(row, column, board) == false) {//Makes sure location is still vacant. Further details in 'checkVacancy' method.
+                System.out.println("Place already used. Choose another.");
+            } else { //= location is vacant, don't ask again for location.
+                ask = false;
+                break;
+            }
+        }
+        board[row][column] = mark;//Change the location the player typed into his mark.
+        printBoard(board);
+        return board;
+    }
+
+    static int row() {
+        Scanner scanner = new Scanner(System.in);
+        int row = 0;
+        boolean again = true;//Determines whether to ask again. False when the location is legal.
+        while (again) {//While there is need to ask for a row number:
+            System.out.println("Please enter the row of the place you want to mark");
+            row = scanner.nextInt();
+            if (checkLegality(row) == true) {//See of the number is legal. More details attached to 'checkLegality' method.
+                again = false; //If the number is legal, there is no need to ask again, so break the loop and change the boolean, so it will not start again.
+                break;
+            }
+        }
+        return row;
+    }
+
+    static int column() {//The same as 'row' method.
+        Scanner scanner = new Scanner(System.in);
+        int column = 0;
+        boolean again = true;
+        while (again) {
+            System.out.println("Please enter the column of the place you want to mark");
+            column = scanner.nextInt();
+            if (checkLegality(column)) {
+                again = false;
+                break;
+            }
+        }
+        return column;
+    }
+
+    static boolean checkLegality(int location) { //Sees if the row/column number that the player types is in the given range.
+        boolean legalNumber = true;
+        if (location < 0 || location > 2) {
+            System.out.println("Illegal row number.");
+            legalNumber = false;
+        }
+        return legalNumber;
+    }
+
+    static boolean checkVacancy(int row, int column, char[][] board) {//Sees if the location (row+column) that the player typed is still vacant and ready to use,
+        boolean vacantSpace = true;
+        if (board[row][column] == '_') {//If the index of the player's numbers is still equals to '_' it means it is still vacant.
+            vacantSpace = true;
+        } else {//If it is not equal to '_' the space is not vacant.
+            vacantSpace = false;
+        }
+        return vacantSpace;
+    }
+
+
+    public static void printBoard(char[][] board) {//Based on a given matrix, print it in the following way:
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                System.out.print(board[i][j]);
+            }
+            System.out.println();//Enter new line after every index in the "big" array = rows.
+        }
+    }
+
+    public static boolean checkWin(char[][] board) {//Looks at a given board and determines whether there is a win. Returns conclusion: win = true or false?
+        boolean win = false;
+        for (int i = 0; i < 3; i++) {//Because the matrix is 3 rows and three columns, there is a need for only three rounds, as follows:
+            if (board[i][0] == board[i][1] && board[i][0] == board[i][2] && board[i][0] != '_') {//Check wins of entire rows, first goes over row '0', then row '1', then row '2', matches the number of rounds of the current loop = i.
+                System.out.println("The winner is " + board[i][0]);//the winner's name is the mark on each one of the winning's spots, so I used one spot.
+                win = true;
+                break;//No need to check other possibilities. Leave the loop and give the conclusion win = true.
+            } else if (board[0][i] == board[1][i] && board[1][i] == board[2][i] && board[0][i] != '_') {//Check wins of entire columns, first goes over column '0', then column '1', then column '2', matches the number of rounds of the loops = i.
+                System.out.println("The winner is " + board[0][i]);
+                win = true;
+                break;
+            } else if (board[0][0] == board[1][1] && board[0][0] == board[2][2] && board[0][0] != '_') {//Checks wins of diagonal strikes. There are fixed spots and are not related to i because there are only two diagonal options. This is the first.
+                System.out.println("The winner is " + board[0][0]);
+                win = true;
+                break;
+            } else if (board[0][2] == board[1][1] && board[0][2] == board[2][0] && board[0][2] != '_') {//Checks the second diagonal option for a win.
+                System.out.println("The winner is " + board[0][2]);
+                win = true;
+                break;
+            } else {//In case none of the above were correct, the conclusion is that win = false. No wins yet.
+                win = false;
+            }
+        }
+        return win;
+    }
+
+
+}
